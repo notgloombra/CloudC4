@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import './App.css';
+import faviconUrl from '../assets/icon.ico?url';
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,6 +14,21 @@ function App() {
   const particleIdRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const [huePhase, setHuePhase] = useState(0);
+
+  // Set the browser tab title and favicon from /assets/icon.ico.
+  useEffect(() => {
+    document.title = 'CloudC4';
+
+    let favicon = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      document.head.appendChild(favicon);
+    }
+
+    favicon.type = 'image/x-icon';
+    favicon.href = faviconUrl;
+  }, []);
 
   // Initialize audio context on first interaction
   const initAudio = useCallback(() => {
@@ -58,24 +74,6 @@ function App() {
     osc.stop(ctx.currentTime + 0.3);
   }, [initAudio]);
 
-  // Play download complete sound
-  const playCompleteSound = useCallback(() => {
-    const ctx = initAudio();
-    const notes = [523, 659, 784, 1047];
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + i * 0.1);
-      osc.stop(ctx.currentTime + i * 0.1 + 0.2);
-    });
-  }, [initAudio]);
-
   // Spawn particles
   const spawnParticles = useCallback((count: number, centerX: number, centerY: number) => {
     const newParticles: Array<{ id: number; x: number; y: number; size: number; opacity: number; speed: number; angle: number }> = [];
@@ -101,16 +99,9 @@ function App() {
     setTimeout(() => setGlitchActive(false), 300);
     setTimeout(() => setIsPressed(false), 200);
 
-    // Create a temporary link to download from public/download/
-    const link = document.createElement('a');
-    link.href = '/download/Cloudc4.exe';
-    link.download = 'Cloudc4.exe';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    playCompleteSound();
-  }, [playClickSound, playCompleteSound]);
+    // Open the GitHub release page instead of downloading a local file.
+    window.location.href = 'https://github.com/notgloombra/Cloudc4-clicker/releases/tag/v1.0.0';
+  }, [playClickSound]);
 
   // Canvas background animation
   useEffect(() => {
